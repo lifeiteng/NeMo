@@ -16,6 +16,7 @@ NFA is a tool for generating token-, word- and segment-level timestamps of speec
 2. Prepare a NeMo-style manifest containing the paths of audio files you would like to process, and (optionally) their text.
 3. Run NFA's `align.py` script with the desired config, e.g.:
     ``` bash
+    pip install praatio
     python <path_to_NeMo>/tools/nemo_forced_aligner/align.py \
 	    pretrained_name="stt_en_fastconformer_hybrid_large_pc" \
 	    manifest_filepath=<path to manifest of utterances you want to align> \
