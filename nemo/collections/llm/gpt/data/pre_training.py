@@ -15,7 +15,7 @@
 import logging
 import os
 import warnings
-from pathlib import Path
+from pathlib import Path, PosixPath
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import pytorch_lightning as pl
@@ -73,7 +73,7 @@ def validate_dataset_asset_accessibility(paths):
             validate_dataset_asset_accessibility(p)
         return
 
-    if not isinstance(paths, str) and not isisntance(paths, Path):
+    if not isinstance(paths, str) and not isinstance(paths, Path):
         raise ValueError("Expected path to be of string or Path type.")
 
     path = Path(paths)
@@ -137,7 +137,7 @@ class PreTrainingDataModule(pl.LightningDataModule, IOMixin):
 
     def __init__(
         self,
-        paths: Path | List | Dict[str, List],
+        paths: str | List | Dict[str, List],
         seq_length: int = 2048,
         tokenizer: Optional["TokenizerSpec"] = None,
         micro_batch_size: int = 4,
@@ -160,6 +160,9 @@ class PreTrainingDataModule(pl.LightningDataModule, IOMixin):
             paths = [paths]
 
         from megatron.core.datasets.utils import get_blend_from_list
+
+        if isinstance(paths[0], PosixPath):
+            paths = [str(path) for path in paths]
 
         validate_dataset_asset_accessibility(paths)
 
