@@ -1851,11 +1851,19 @@ class RNNTDecoderJoint(torch.nn.Module, Exportable):
         }
 
     def forward(self, encoder_outputs, targets, target_length, input_states_1, input_states_2):
-        decoder_outputs = self.decoder(targets, target_length, (input_states_1, input_states_2))
+        decoder_outputs = self.decoder(targets=targets, target_length=target_length, states=(input_states_1, input_states_2))
         decoder_output = decoder_outputs[0]
         decoder_length = decoder_outputs[1]
         input_states_1, input_states_2 = decoder_outputs[2][0], decoder_outputs[2][1]
-        joint_output = self.joint(encoder_outputs, decoder_output)
+
+        # Export/inference path: always emit joint logits.
+        # If fused loss/WER is enabled in RNNTJoint, bypass its training-only branch
+        # and call the underlying projection directly.
+        if getattr(self.joint, "_fuse_loss_wer", False):
+            joint_output = self.joint.joint(encoder_outputs.transpose(1, 2), decoder_output.transpose(1, 2))
+        else:
+            joint_output = self.joint(encoder_outputs=encoder_outputs, decoder_outputs=decoder_output)
+
         return (joint_output, decoder_length, input_states_1, input_states_2)
 
 
